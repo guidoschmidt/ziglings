@@ -192,8 +192,8 @@ const TripItem = union(enum) {
             // Oops! The hermit forgot how to capture the union values
             // in a switch statement. Please capture both values as
             // 'p' so the print statements work!
-            .place => print("{s}", .{p.name}),
-            .path => print("--{}->", .{p.dist}),
+            .place => |p| print("{s}", .{p.name}),
+            .path => |p| print("--{}->", .{p.dist}),
         }
     }
 };
@@ -236,6 +236,25 @@ const HermitsNotebook = struct {
     // Mark the start of empty space in the notebook.
     end_of_entries: u8 = 0,
 
+    fn printNotebook(self: *HermitsNotebook) void {
+        print("+------------------------------------------------+\n", .{});
+        print("|              ~ Hermit's Notebook ~             |\n", .{});
+        print("+---+----------------+----------------+----------+\n", .{});
+        print("|   |      Place     |      From      | Distance |\n", .{});
+        print("+---+----------------+----------------+----------+\n", .{});
+        for(self.entries) |entry, i| {
+            const coming_from = entry.?.coming_from orelse null;
+            const coming_from_str = if (coming_from == null) "null" else coming_from.?.name;
+            const whitespace: [16]u8 = .{' '} ** 16;
+            print( "| {} |{s}{s}|{s}{s}|        {} |\n",
+                  .{i,
+                    entry.?.place.name, whitespace[0..(16 - entry.?.place.name.len)],
+                    coming_from_str, whitespace[0..(16 - coming_from_str.len)],
+                    entry.?.dist_to_reach });
+        }
+        print("+---+----------------+----------------+----------+\n", .{});
+    }
+
     // We'll often want to find an entry by Place. If one is not
     // found, we return null.
     fn getEntry(self: *HermitsNotebook, place: *const Place) ?*NotebookEntry {
@@ -255,8 +274,7 @@ const HermitsNotebook = struct {
             // dereference and optional value "unwrapping" look
             // together. Remember that you return the address with the
             // "&" operator.
-            if (place == entry.*.?.place) return entry;
-            // Try to make your answer this long:__________;
+            if (place == entry.*.?.place) return &entry.*.?;
         }
         return null;
     }
@@ -309,7 +327,7 @@ const HermitsNotebook = struct {
     //
     // Looks like the hermit forgot something in the return value of
     // this function. What could that be?
-    fn getTripTo(self: *HermitsNotebook, trip: []?TripItem, dest: *Place) void {
+    fn getTripTo(self: *HermitsNotebook, trip: []?TripItem, dest: *Place) TripError!void {
         // We start at the destination entry.
         const destination_entry = self.getEntry(dest);
 
@@ -358,17 +376,6 @@ pub fn main() void {
     const start = &a;        // Archer's Point
     const destination = &f;  // Fox Pond
 
-    // Store each Path array as a slice in each Place. As mentioned
-    // above, we needed to delay making these references to avoid
-    // creating a dependency loop when the compiler is trying to
-    // figure out how to allocate space for each item.
-    a.paths = a_paths[0..];
-    b.paths = b_paths[0..];
-    c.paths = c_paths[0..];
-    d.paths = d_paths[0..];
-    e.paths = e_paths[0..];
-    f.paths = f_paths[0..];
-
     // Now we create an instance of the notebook and add the first
     // "start" entry. Note the null values. Read the comments for the
     // checkNote() method above to see how this entry gets added to
@@ -381,6 +388,18 @@ pub fn main() void {
         .dist_to_reach = 0,
     };
     notebook.checkNote(working_note);
+
+
+    // Store each Path array as a slice in each Place. As mentioned
+    // above, we needed to delay making these references to avoid
+    // creating a dependency loop when the compiler is trying to
+    // figure out how to allocate space for each item.
+    a.paths = a_paths[0..];
+    b.paths = b_paths[0..];
+    c.paths = c_paths[0..];
+    d.paths = d_paths[0..];
+    e.paths = e_paths[0..];
+    f.paths = f_paths[0..];
 
     // Get the next entry from the notebook (the first being the
     // "start" entry we just added) until we run out, at which point
@@ -403,6 +422,8 @@ pub fn main() void {
             notebook.checkNote(working_note);
         }
     }
+
+    notebook.printNotebook();
 
     // Once the loop above is complete, we've calculated the shortest
     // path to every reachable Place! What we need to do now is set
