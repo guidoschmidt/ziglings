@@ -245,11 +245,10 @@ const HermitsNotebook = struct {
         for(self.entries) |entry, i| {
             const coming_from = entry.?.coming_from orelse null;
             const coming_from_str = if (coming_from == null) "null" else coming_from.?.name;
-            const whitespace: [16]u8 = .{' '} ** 16;
-            print( "| {} |{s}{s}|{s}{s}|        {} |\n",
+            print( "| {} |{s: <16}|{s: <16}|        {} |\n",
                   .{i,
-                    entry.?.place.name, whitespace[0..(16 - entry.?.place.name.len)],
-                    coming_from_str, whitespace[0..(16 - coming_from_str.len)],
+                    entry.?.place.name,
+                    coming_from_str,
                     entry.?.dist_to_reach });
         }
         print("+---+----------------+----------------+----------+\n", .{});
