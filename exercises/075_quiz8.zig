@@ -26,7 +26,7 @@ var f = Place{ .name = "Fox Pond" };
 // Remember how we didn't have to declare the numeric type of the
 // place_count because it is only used at compile time? That
 // probably makes a lot more sense now. :-)
-const place_count = 6;
+const place_count: u8 = 6;
 
 const Path = struct {
     from: *const Place,
@@ -49,7 +49,11 @@ const Path = struct {
 //
 // Please fill in the body of this function!
 fn makePath(from: *Place, to: *Place, dist: u8) Path {
-
+    return Path {
+        .from = from,
+        .to = to,
+        .dist = dist
+    };
 }
 
 // Using our new function, these path definitions take up considerably less
